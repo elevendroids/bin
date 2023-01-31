@@ -10,7 +10,7 @@ use crate::{
     errors::{InternalServerError, NotFound},
     highlight::highlight,
     io::{generate_id, get_paste, store_paste, PasteStore},
-    params::{HostHeader, IsPlaintextRequest},
+    params::IsPlaintextRequest,
 };
 
 use actix_web::{
@@ -107,15 +107,12 @@ async fn submit(input: web::Form<IndexForm>, store: Data<PasteStore>) -> impl Re
 
 async fn submit_raw(
     data: Bytes,
-    host: HostHeader,
+    req: HttpRequest,
     store: Data<PasteStore>,
 ) -> Result<String, Error> {
     let id = generate_id();
-    let uri = if let Some(Ok(host)) = host.0.as_ref().map(|v| std::str::from_utf8(v.as_bytes())) {
-        format!("https://{}/{}", host, id)
-    } else {
-        format!("/{}", id)
-    };
+    let conn = req.connection_info().clone();
+    let uri = format!("{}://{}/{}\n", conn.scheme(), conn.host(), id);
 
     store_paste(&store, id, data);
 

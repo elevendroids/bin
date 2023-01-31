@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use actix_web::{
     dev::Payload,
-    http::header::{self, HeaderValue},
+    http::header,
     FromRequest, HttpMessage, HttpRequest,
 };
 use futures::future::ok;
@@ -41,17 +41,3 @@ impl FromRequest for IsPlaintextRequest {
     }
 }
 
-/// Gets the Host header from the request.
-///
-/// The inner value of this `HostHeader` will be `None` if there was no Host header
-/// on the request.
-pub struct HostHeader(pub Option<HeaderValue>);
-
-impl FromRequest for HostHeader {
-    type Error = actix_web::Error;
-    type Future = futures::future::Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
-        ok(Self(req.headers().get(header::HOST).cloned()))
-    }
-}
